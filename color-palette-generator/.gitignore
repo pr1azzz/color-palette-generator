@@ -5,14 +5,21 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-.DS_Store
-dist
-dist-ssr
-coverage
-*.local
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
 
 # Editor directories and files
 .vscode/*
@@ -24,13 +31,22 @@ coverage
 *.sln
 *.sw?
 
-*.tsbuildinfo
+# Build output
+dist/
+dist-ssr/
+*.local
 
-.eslintcache
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
+# macOS
+.DS_Store
 
-# Vitest
-__screenshots__/
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
