@@ -520,52 +520,132 @@ export default {
       const baseHsl = hexToHsl(accentBaseColor.value)
       const target = parseFloat(targetContrast.value)
       const results = []
-      
+      const usedHexes = new Set()
+
       // Генерируем цвета в разных направлениях
-      for (let i = 0; i < 12; i++) {
-        let hue, saturation, lightness
-        
-        switch (accentDirection.value) {
-          case 'darker':
-            hue = baseHsl.h
-            saturation = Math.min(100, baseHsl.s + 10)
-            lightness = Math.max(10, baseHsl.l - (i + 1) * 15)
-            break
-            
-          case 'lighter':
-            hue = baseHsl.h
-            saturation = Math.min(100, baseHsl.s + 10)
-            lightness = Math.min(90, baseHsl.l + (i + 1) * 15)
-            break
-            
-          case 'complementary':
-            hue = (baseHsl.h + 180 + i * 30) % 360
-            saturation = Math.min(100, baseHsl.s + 20)
-            lightness = baseHsl.l < 50 ? baseHsl.l + 30 : baseHsl.l - 30
-            break
-        }
-        
-        const accentColor = hslToHex(hue, saturation, lightness)
-        const contrast = calculateContrast(accentBaseColor.value, accentColor)
-        
-        if (contrast >= target) {
-          let rating = 'Недостаточно'
-          if (contrast >= 7) rating = 'AAA'
-          else if (contrast >= 4.5) rating = 'AA'
-          
-          results.push({
-            hex: accentColor,
-            contrast,
-            rating,
-            hue,
-            saturation,
-            lightness
-          })
-          
-          if (results.length >= 6) break
+      switch (accentDirection.value) {
+        case 'darker':
+          // От светлого к темному: начинаем с высокой яркости и уменьшаем
+          for (let i = 0; i < 24 && results.length < 6; i++) {
+            const hue = (baseHsl.h + (i % 3 - 1) * 10) % 360 // Небольшое варьирование hue
+            const saturation = Math.min(100, baseHsl.s + 15 + (i % 4) * 5)
+            const lightness = Math.max(5, 95 - i * 8) // От светлого к темному
+
+            const accentColor = hslToHex(hue, saturation, lightness)
+            const contrast = calculateContrast(accentBaseColor.value, accentColor)
+
+            if (contrast >= target && !usedHexes.has(accentColor)) {
+              let rating = 'Недостаточно'
+              if (contrast >= 7) rating = 'AAA'
+              else if (contrast >= 4.5) rating = 'AA'
+
+              results.push({
+                hex: accentColor,
+                contrast,
+                rating,
+                hue,
+                saturation,
+                lightness
+              })
+
+              usedHexes.add(accentColor)
+            }
+          }
+          break
+
+        case 'lighter':
+          // От темного к светлому: начинаем с низкой яркости и увеличиваем
+          for (let i = 0; i < 24 && results.length < 6; i++) {
+            const hue = (baseHsl.h + (i % 3 - 1) * 10) % 360 // Небольшое варьирование hue
+            const saturation = Math.min(100, baseHsl.s + 15 + (i % 4) * 5)
+            const lightness = Math.min(95, 5 + i * 8) // От темного к светлому
+
+            const accentColor = hslToHex(hue, saturation, lightness)
+            const contrast = calculateContrast(accentBaseColor.value, accentColor)
+
+            if (contrast >= target && !usedHexes.has(accentColor)) {
+              let rating = 'Недостаточно'
+              if (contrast >= 7) rating = 'AAA'
+              else if (contrast >= 4.5) rating = 'AA'
+
+              results.push({
+                hex: accentColor,
+                contrast,
+                rating,
+                hue,
+                saturation,
+                lightness
+              })
+
+              usedHexes.add(accentColor)
+            }
+          }
+          break
+
+        case 'complementary':
+          // Комплементарные цвета с динамической яркостью
+          for (let i = 0; i < 24 && results.length < 6; i++) {
+            const hue = (baseHsl.h + 180 + i * 15) % 360
+            const saturation = Math.min(100, baseHsl.s + 25 + (i % 4) * 10)
+            // Динамическая яркость: если базовый цвет темный, делаем акцент светлее, и наоборот
+            const baseLightness = baseHsl.l
+            const lightness = baseLightness < 50
+              ? Math.min(90, baseLightness + 20 + (i % 3) * 10)
+              : Math.max(10, baseLightness - 20 - (i % 3) * 10)
+
+            const accentColor = hslToHex(hue, saturation, lightness)
+            const contrast = calculateContrast(accentBaseColor.value, accentColor)
+
+            if (contrast >= target && !usedHexes.has(accentColor)) {
+              let rating = 'Недостаточно'
+              if (contrast >= 7) rating = 'AAA'
+              else if (contrast >= 4.5) rating = 'AA'
+
+              results.push({
+                hex: accentColor,
+                contrast,
+                rating,
+                hue,
+                saturation,
+                lightness
+              })
+
+              usedHexes.add(accentColor)
+            }
+          }
+          break
+      }
+
+      // Если не нашли достаточно цветов, пробуем дополнительные методы
+      if (results.length < 6) {
+        // Дополнительные вариации с экстремальными значениями насыщенности
+        for (let i = 0; i < 12 && results.length < 6; i++) {
+          const hue = (baseHsl.h + i * 30) % 360
+          const saturation = i % 2 === 0 ? 100 : 30
+          const lightness = baseHsl.l < 50 ? 80 + (i % 3) * 5 : 20 - (i % 3) * 5
+
+          const accentColor = hslToHex(hue, saturation, lightness)
+          const contrast = calculateContrast(accentBaseColor.value, accentColor)
+
+          if (contrast >= target && !usedHexes.has(accentColor)) {
+            let rating = 'Недостаточно'
+            if (contrast >= 7) rating = 'AAA'
+            else if (contrast >= 4.5) rating = 'AA'
+
+            results.push({
+              hex: accentColor,
+              contrast,
+              rating,
+              hue,
+              saturation,
+              lightness
+            })
+
+            usedHexes.add(accentColor)
+          }
         }
       }
-      
+
       accentColors.value = results
     }
 
